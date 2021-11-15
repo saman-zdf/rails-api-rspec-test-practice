@@ -24,6 +24,7 @@ gem 'bootsnap', '>= 1.4.2', require: false
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin AJAX possible
 gem 'rack-cors'
+gem "jwt"
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
@@ -32,8 +33,17 @@ group :development, :test do
 
   # ************#**********
   # custom tests for test environment 
+  # for rspec rails you need to run rails g rspec:install to configure the file we need for the test 
   gem "rspec-rails"
+  # in spec directory we should create a helper or support direcotory with two file 1. database_cleaner.rb, 2.factory_bot.rb,
+
+  # factoryBot config is the below configuration:
+  #  RSpec.configure do |config|
+  #   config.include FactoryBot::Syntax::Methods
+  #  end
   gem "factory_bot_rails"
+
+  # in database_cleaner we need to add some configuration 
   gem "database_cleaner"
   gem "rails-controller-testing"
 end
