@@ -48,6 +48,9 @@ group :development, :test do
   gem "rails-controller-testing"
   # for testing the association
   gem 'shoulda-matchers'
+
+  # adding faker gem for some dummy data
+  gem "faker"
 end
 
 group :development do

@@ -283,3 +283,88 @@ once the above config is done you can implement your association testing in you 
     it {should validate_presence_of(:content)}
   end
 ```
+
+### All the model has been added and been tested.
+
+---
+
+## controllers
+
+First we can generate a category controller, once its generated we can implement some test in spec/request/categories_spec.rb. because we don't have any data in the category table we need to create category from our factory. the tests we need are:
+
+```Ruby
+ describe "GET /categories" do
+    # because our database is empty we need to before all tests create(:category) to have data in our database for the test
+    before(:all) do
+      create(:category)
+    end
+
+    before(:each) do
+      get '/categories'
+    end
+
+    it "should respond with 200 ok" do
+      expect(response).to have_http_status(200)
+    end
+    it "should respond with json" do
+      expect(response.content_type).to eq("application/json; charset=utf-8")
+    end
+    it "should include" do
+      expect(response.body).to include("Awesome Category")
+    end
+
+  end
+```
+
+once the test has been implemented we can run in terminal:
+
+```
+rspec
+```
+
+we should expect all the tests to fail, in this instance we have three test for our get request. next step is to create a index action in categories controller:
+
+```Ruby
+def index
+  categories = Category.all
+  render json: categories, status: 200
+end
+```
+
+after we created a index action, we need to create categories route in route.rb:
+
+```Ruby
+get "/categories", to: "categories#index", as: "categories"
+```
+
+now if we run rspec, all the three test for get request will pass;
+next step we need to add the faker gem to add some dummy data in our seed.rb file for all the models:
+
+```Ruby
+if User.count == 0
+  User.create(username: "first", email: "first@test", password: "121212", password_confirmation: '121212' )
+  puts "Created user"
+end
+
+if Category.count == 0
+  categories = ['food', 'movies', 'hobbies', 'entertainment', 'health' ]
+
+  categories.each do |category|
+    Category.create(name: category)
+  end
+
+  puts "Created categories"
+end
+
+if Post.count == 0
+  15.times do
+    author = User.first
+    Post.create(author: author, title: Faker::Lorem.words(number: 3).join(' '), content: Faker::Lorem.paragraph_by_chars(number: 2000, supplemental: false), category_id: rand(5) + 1)
+  end
+  puts "Created posts"
+end
+```
+
+## once is done we need to make some http requests;
+
+## Http requests
