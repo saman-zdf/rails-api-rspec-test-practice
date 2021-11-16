@@ -31,54 +31,59 @@ config.use_transactional_fixtures = false
 need a support dir for configuration in spec directory for database_cleaner.rb and factory_bot.rb.
 
 the database_cleaner.rb needs the below configs:
-RSpec.configure do |config|
-
-- it will tell the database cleaner how to clean beofre suite
 
 ```Ruby
-config.before(:suite) do
-DatabaseCleaner.clean_with(:truncation)
+RSpec.configure do |config|
+# - it will tell the database cleaner how to clean beofre suite
+
+  config.before(:suite) do
+    DatabaseCleaner.clean_with(:truncation)
+  end
+
+# - it will tell the database cleaner of what strategy to use, which in this case is going to be transaction
+
+  config.before(:each) do
+    DatabaseCleaner.strategy = :transaction
+  end
+
+# - start after each test
+
+  config.before(:each) do
+    DatabaseCleaner.start
+  end
+
+# - clean after each test
+
+  config.after(:each) do
+    DatabaseCleaner.clean
+  end
+
+# - same precedure for all the data in test database
+
+  config.before(:all) do
+    DatabaseCleaner.start
+  end
+
+  config.after(:all) do
+    DatabaseCleaner.clean
+  end
 end
 
-- it will tell the database cleaner of what strategy to use, which in this case is going to be transaction
+```
 
-config.before(:each) do
-DatabaseCleaner.strategy = :transaction
-end
+In the factory_bot.rb we need the below configuration:
 
-- start after each test
-
-config.before(:each) do
-DatabaseCleaner.start
-end
-
-- clean after each test
-
-config.after(:each) do
-DatabaseCleaner.clean
-end
-
-- same precedure for all the data in test database
-
-config.before(:all) do
-DatabaseCleaner.start
-end
-
-config.after(:all) do
-DatabaseCleaner.clean
- end
-end
-
-- the factory_bot.rb needs the below configs:
+```Ruby
+# the factory_bot.rb needs the below configs:
   RSpec.configure do |config|
-  config.include FactoryBot::Syntax::Methods
+    config.include FactoryBot::Syntax::Methods
   end
 ```
 
 ---
 
 - Day-2: minutes 40:00,
-  the first model should be created, when we generate the model we also get two different dirs with files in out spec dir, 1. factory/categories.rb: in this file we can pass some dummy data for some basic test. 2. model/ctegory_spec.rb, in this file you can write all your test for your category model.
+  the first model should be created, when we generate the model we also get two different dirs with files in the spec dir, 1. factory/categories.rb: in this file we can pass some dummy data for some basic test. 2. model/ctegory_spec.rb, in this file you can write all your test for your category model.
 
 1. categories.rb can contain the below code(just for reminder):
 
@@ -148,9 +153,9 @@ FactoryBot.define do
 end
 ```
 
-just to test our user model.
+^^ just to test our user model.
 
-next we need to write some test in our user_spec.rb, we can have as many tests as we want, but the basic would be enough for just to check if the user in valid or the username is equal to the one we testing
+next we need to write some test in our user_spec.rb, we can have as many tests as we want, but the basic would be enough for just to check if the user is valid or the username is equal to the one we testing
 
 ```Ruby
 require 'rails_helper'
@@ -217,7 +222,7 @@ end
 Time 1:02:13;
 
 Creating a post model
-once you created your post model, you have a ability of changing the user to author by using the below syntax in your post model belongs_to:
+when you created your post model, you have a ability of changing the user to author by using the below syntax in your post model belongs_to:
 
 ```Ruby
 belongs_to :authour, class_name: "User", foreign_key: "user_id"
@@ -290,11 +295,11 @@ once the above config is done you can implement your association testing in you 
 
 ## controllers
 
-First we can generate a category controller, once its generated we can implement some test in spec/request/categories_spec.rb. because we don't have any data in the category table we need to create category from our factory. the tests we need are:
+First we can generate a category controller, when its generated we can implement some test in spec/request/categories_spec.rb. because we don't have any data in the category table we need to create category from our factory. the tests we need are:
 
 ```Ruby
  describe "GET /categories" do
-    # because our database is empty we need to before all tests create(:category) to have data in our database for the test
+    # because our database is empty we need to before all tests create(:category) to have data in our test database for the test
     before(:all) do
       create(:category)
     end
@@ -365,6 +370,115 @@ if Post.count == 0
 end
 ```
 
-## once is done we need to make some http requests;
+## Done;
 
 ## Http requests
+
+In this step we need to generate controller for our model to request the existing data from our database. first we will generate categories controller. when it is done. we can right some basic test for the get request;
+in the spec/request/categories.rb we need to implement these test:
+
+```Ruby
+  # describe Get /index should to change to '/categories'
+  context "/categories"
+    before(:all) do
+      create(:category)
+    end
+
+    before(:each) do
+      get '/categories'
+    end
+
+    it "should respond with 200 ok" do
+      expect(response).to have_http_status(200)
+    end
+    it "should have a correct content type" do
+      expect(response.content_type).to eq('application/json; charset=utf-8')
+    end
+    it "should respond with body from factory content of category" do
+      expect(response.body).to include("Awesome Category")
+    end
+
+
+  end
+
+```
+
+now if run rspec all tests will fail;
+when we done with our test we need to create the index action for categories controller;
+
+```Ruby
+  def index
+    categories = Category.all
+    render json: categories, status: 200
+  end
+```
+
+next we need to to set up categories route
+
+```Ruby
+get '/categories',to: 'categories#index', as: 'categories'
+```
+
+## now if run rspec all tests will pass;
+
+next we need to generate the posts controller, then we need to write some basic tests. but before writing any test we need to config the post association in the factory bot for posts.rb
+
+```Ruby
+
+FactoryBot.define do
+  factory :post do
+    # this two association will recognise the foreign key
+    association :author, factory: :user
+    association :category
+    title { "FirstTitle" }
+    content { "My first content for the factory" }
+  end
+end
+```
+
+next we can write our test in request/posts_spec.rb:
+
+```Ruby
+  # in describe block the GET /index should change to /posts
+  context "/posts" do
+    before(:all) do
+      create(:post)
+    end
+    before(:each) do
+      get '/posts'
+    end
+
+    it "should have a respond of status 200 ok" do
+      expect(response).to have_http_status(200)
+    end
+
+    it "should have the correct content-type" do
+      expect(respose.content_type).to eq("application/json; charset=utf-8")
+    end
+    it "should have a body response of factory post" do
+      expect(respose.body).to include("My first content for the factory")
+    end
+    it "should have a body response of factory category" do
+      expect(respose.body).to include("Awesome Category")
+    end
+  end
+```
+
+When we done with our test, we can run rspec and all tests will fail; next step is to create a index action for posts:
+
+if we don't use eager-load it will take more time to query all the posts including author usrename and categries, but with rails there is a way to work around that
+
+```Ruby
+def  index
+  posts = Post.all.includes(:author, :category)
+  render json: posts, include: {author: {only: :username}, category: {only: :name}}, status: 200
+end
+```
+
+next we need to set our router in the route.rb for index action,
+
+```Ruby
+  get '/posts/
+```
+
+## Now if we run rspec we will pass all the tests'
