@@ -46,6 +46,8 @@ group :development, :test do
   # in database_cleaner we need to add some configuration 
   gem "database_cleaner"
   gem "rails-controller-testing"
+  # for testing the association
+  gem 'shoulda-matchers'
 end
 
 group :development do

@@ -213,3 +213,73 @@ RSpec.describe User, type: :model do
 end
 
 ```
+
+Time 1:02:13;
+
+Creating a post model
+once you created your post model, you have a ability of changing the user to author by using the below syntax in your post model belongs_to:
+
+```Ruby
+belongs_to :authour, class_name: "User", foreign_key: "user_id"
+```
+
+your user and category model need to have a:
+
+```Ruby
+# in your user model
+has_may :posts
+# in your category model
+has_many :posts
+```
+
+In yor spec/post_spec.rb file you can test the association between your model by this long syntax, but there is gem call shoulda-matchers that can solve your problem in a very nicer way.
+
+```Ruby
+# The syntax is
+it "shuold belong to the user" do
+  t = Post.reflect_on_association(:author)
+  expect(t.macro).to eq(:belongs_to)
+end
+```
+
+The gem:
+
+```Ruby
+gem "shoulda-matchers"
+```
+
+once you install the gem with bundle install, you need create a file inside your spec/support dir and call it shoulda_matchers.rb and do some configuration for post model association test:
+
+```Ruby
+Shoulda::Matchers.configure do |config|
+  config.integrate do |with|
+    with.test_framework :rspec
+    with.library :rails
+  end
+end
+```
+
+once the above config is done you can implement your association testing in you post_spec.rb:
+
+```Ruby
+  # this is a longer syntax to check the association between your model
+
+  # it "should belong to a user" do
+  #   t = Post.reflect_on_association(:author)
+  #   expect(t.macro).to eq(:belongs_to)
+  # end
+
+
+  # this test is after we install the shoulda-matchers gem, it's shorter and a lot nicer syntax
+  context "associations" do
+    it {should belong_to(:author).class_name("User")}
+    it {should belong_to(:category)}
+  end
+
+
+  # validation test
+  context "validation" do
+    it {should validate_presence_of(:title)}
+    it {should validate_presence_of(:content)}
+  end
+```
