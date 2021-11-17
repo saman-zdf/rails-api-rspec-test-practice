@@ -374,53 +374,6 @@ end
 
 ## Http requests
 
-In this step we need to generate controller for our model to request the existing data from our database. first we will generate categories controller. when it is done. we can right some basic test for the get request;
-in the spec/request/categories.rb we need to implement these test:
-
-```Ruby
-  # describe Get /index should to change to '/categories'
-  context "/categories"
-    before(:all) do
-      create(:category)
-    end
-
-    before(:each) do
-      get '/categories'
-    end
-
-    it "should respond with 200 ok" do
-      expect(response).to have_http_status(200)
-    end
-    it "should have a correct content type" do
-      expect(response.content_type).to eq('application/json; charset=utf-8')
-    end
-    it "should respond with body from factory content of category" do
-      expect(response.body).to include("Awesome Category")
-    end
-
-
-  end
-
-```
-
-now if run rspec all tests will fail;
-when we done with our test we need to create the index action for categories controller;
-
-```Ruby
-  def index
-    categories = Category.all
-    render json: categories, status: 200
-  end
-```
-
-next we need to to set up categories route
-
-```Ruby
-get '/categories',to: 'categories#index', as: 'categories'
-```
-
-## now if run rspec all tests will pass;
-
 next we need to generate the posts controller, then we need to write some basic tests. but before writing any test we need to config the post association in the factory bot for posts.rb
 
 ```Ruby
@@ -482,3 +435,88 @@ next we need to set our router in the route.rb for index action,
 ```
 
 ## Now if we run rspec we will pass all the tests'
+
+---
+
+next we need to write some test for single post with id, inside the request/posts_spec.rb we need to put:
+
+```Ruby
+describe "GET /posts/:id" do
+    # context for the valid id
+      context "valid post id" do
+
+        before(:each) do
+          get '/posts/1'
+        end
+
+        it "should response with status 200 ok" do
+          expect(response).to have_http_status(200)
+        end
+
+        it "should have a right content-type" do
+          expect(response.content_type).to eq("application/json; charset=utf-8")
+        end
+
+        it "should respond with factory content for post" do
+          expect(response.body).to include('My first content for the factory')
+        end
+        it "should respond with factory content for category" do
+          expect(response.body).to include('Awesome Category')
+        end
+      end
+    # end of context for the valid id
+    # Context for invalid post id
+    context "invlid valid post id" do
+      before(:each) do
+        get '/posts/2'
+      end
+
+      it "should response with status 404" do
+        expect(response).to have_http_status(404)
+      end
+
+      it "should have a right content-type" do
+        expect(response.content_type).to eq("application/json; charset=utf-8")
+      end
+      it "should respond with an error" do
+        expect(response.body).to include('Unable to find post')
+      end
+    end
+    # End Context for invalid post id
+
+```
+
+if we run rspec all tests will fail, we need to create a show action and route for show
+
+```Ruby
+def show
+# you can set show params as before action too
+  @post = Post.find(params[:id])
+  render json: @post, include: {author: {only: :username}, category: {only: :name}}, status: 200
+end
+# you want to set_post as a private method you need to use exception handler like
+private
+  def set_post
+    begin
+      @post = Post.find(params[:id])
+    rescue
+      render json: {error: "Unable to find post"}
+    end
+  end
+# you just need to call it as a before action
+before_action :set_post, only: [:show]
+```
+
+if you run rspec all your tests will pass now. something to mention is just make sure to pass the
+
+```Ruby
+before(:all) do
+ create(:post)
+end
+```
+
+at the top of your RSpec.describe in the posts_spec.rb.
+
+- All the test for the post id has been succesfully done
+
+---

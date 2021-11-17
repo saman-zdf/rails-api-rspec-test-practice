@@ -3,3 +3,10 @@ GET http://localhost:3000/categories
 
 ### Get all the posts from index action
 GET http://localhost:3000/posts
+
+### get request with the valid id for post  
+GET http://localhost:3000/posts/1
+
+
+### get request with the invalid id for post  
+GET http://localhost:3000/posts/20
