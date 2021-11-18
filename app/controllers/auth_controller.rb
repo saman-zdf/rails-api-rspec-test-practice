@@ -17,6 +17,17 @@ class AuthController < ApplicationController
     end
   end
 
+  def register
+    user = User.create(auth_params)
+    unless user.errors.any? 
+      payload = {user_id: user.id, exp: 1.hour.from_now.to_i}
+      token = JWT.encode(payload, Rails.application.credentials.dig(:secret_key_base))
+      render json: {jwt: token, username: user.username}, status: 201
+    else
+      render json: {error: user.errors.full_messages}, status: 422
+    end
+  end
+
   private
     def auth_params
       params.require(:auth).permit( :email, :password, :password_confirmation, :username)

@@ -568,3 +568,87 @@ at the top of your RSpec.describe in the posts_spec.rb.
     end
   end
 ```
+
+next we need to create a login and auth_params actions in the auth controller :
+
+```Ruby
+def login
+  user = User.find_by(email: auth_params[:email])
+  # we can check if the user exist like
+  # && user.authenticate(paswword: auth_params[:password]) or
+  #  we can write in shorthand like:
+  if user&.authenticate(auth_params[:password])
+    payload = {user_id: user.id, exp: 1.hour.from_now.to_i}
+    token = JWT.encode(payload, Rails.application.credentials.dig(:secret_key_base))
+    render json: {jwt: token, username: user.username}, status: 200
+  else
+    render json: {error: "Wrong credentials!!!"}
+  end
+end
+
+private
+  def auth_params
+    params.require(:auth).permit(:email, :password, :password_confirmation, :username)
+  end
+```
+
+Now we can have a manual testing with reset client.
+
+Next we can create some test for the register action:
+
+```Ruby
+  discribe "POST /auth/register" do
+  # you can either create a user in the register block or you can move the create user on the login block one level up to the RSpec.describe, either will work
+    before(:all) do
+      user = create(:user)
+    end
+
+    before(:all) do
+      @user_count = User.count
+    end
+
+    context "register user with valid credentials" do
+      before(:each) do
+        post '/auth/register', params: {auth: {username: "roya", email: "roya@test.com", password: "121212", password_confirmation: "121212"}}
+      end
+
+      it "should respond with 201 ok" do
+        expect(response).to have_http_status(201)
+      end
+      it "should respond with correct content type" do
+        expect(response.content_type).to eq("application/json; charset=utf-8")
+      end
+      it "should respond with correct credentials" do
+        expect(response.body).to include("roya")
+        expect(response.body).to include("jwt")
+      end
+      it "should increase user count by 1" do
+        expect(User.count).to eq @user_count + 1
+      end
+    end
+
+  end
+
+```
+
+Next step is to create a register action for the user model in auth controller:
+
+```Ruby
+  def register
+    user = User.create(auth_params)
+    unless user.errors.any?
+      payload = {user_id: user.id, exp: 1.hour.from_now.to_i}
+      token = JWT.encode(payload, Rails.application.credentials.dig(:secrete_key_base))
+      render json: {jwt: token, username: user.username}, status: 201
+
+    else
+      render json: {error: user.errors.full_messages}, status: 404
+    end
+  end
+```
+
+Now we need to create a route for the register action :
+
+```Ruby
+  post '/auth/register', to: 'auth#register', as: 'register'
+```

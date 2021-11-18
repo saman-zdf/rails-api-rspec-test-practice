@@ -2,10 +2,10 @@ require 'rails_helper'
 
 RSpec.describe "Auths", type: :request do
   describe "POST /auth/login" do
-
     before(:all) do
       @user = create(:user)
     end
+
     # context for the correct credentials
     context "with correct credentials" do 
       # I can change the params data by passing new params data like below, it will change it with the existing data from factory
@@ -47,4 +47,35 @@ RSpec.describe "Auths", type: :request do
     # end of context for testing the incorrect credentials
 
   end
+
+  # test for register user 
+  describe "POST /auth/register" do
+    # test for register with vallid user
+    context "register user with valid details" do
+      before(:all) do
+        @user_count = User.count
+      end
+      before(:each) do
+        post '/auth/register', params: {auth: {username: "reze", email: 'reze@test.com', password: "121212", password_confirmation: '121212'}}
+      end
+
+      it "it should respond with 201 ok" do
+        expect(response).to have_http_status(201)
+      end
+      it "it should respond with correct contetn type" do
+        expect(response.content_type).to eq("application/json; charset=utf-8")
+      end
+
+      it "should include username and jwt in the body" do
+        expect(response.body).to include("reze")
+        expect(response.body).to include("jwt")
+      end
+
+      it "should increase user count" do
+        expect(User.count).to eq @user_count + 1
+      end
+    end
+  end
+
+
 end

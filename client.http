@@ -13,12 +13,25 @@ GET http://localhost:3000/posts/20
 
 
 
+### register a user 
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "username": "Dany1",
+  "email": "dany1@test.com",
+  "password": "121212",
+  "password_confirmation": "121212"
+}
+
+
+
 ### login user with correct credentails 
 POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-  "email": "first@test.com", 
+  "email": "dany@test.com", 
   "password": "121212"
 }
 

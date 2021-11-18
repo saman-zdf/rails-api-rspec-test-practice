@@ -5,4 +5,5 @@ Rails.application.routes.draw do
   get '/posts/:id', to: 'posts#show', as: 'post'
 
   post "/auth/login", to: "auth#login", as: "login"
+  post '/auth/register', to: "auth#register", as: "register"
 end
