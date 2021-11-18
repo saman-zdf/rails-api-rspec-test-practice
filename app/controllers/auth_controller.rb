@@ -5,10 +5,7 @@ class AuthController < ApplicationController
     user = User.find_by(email: auth_params[:email])
     # this is a shorthand of puttin user && user.authenticate
     if user&.authenticate(auth_params[:password])
-      # we need to create a payload which need user id coming form the user we find nad expiry to set time for it
-      payload = {user_id: user.id, exp: 1.hour.from_now.to_i}
-      # when we create token we should pass JWT.encode and pass the payload and Rails.application.credentials.dig(:secret_key_base) to keep our token as secret
-      token = JWT.encode(payload, Rails.application.credentials.dig(:secret_key_base))
+      token = JwtService.encode(user)
       # now we can render our token and user name 
       render json: {jwt: token, username: user.username}, status: 200
     else
@@ -20,8 +17,7 @@ class AuthController < ApplicationController
   def register
     user = User.create(auth_params)
     unless user.errors.any? 
-      payload = {user_id: user.id, exp: 1.hour.from_now.to_i}
-      token = JWT.encode(payload, Rails.application.credentials.dig(:secret_key_base))
+      token = JwtService.encode(user)
       render json: {jwt: token, username: user.username}, status: 201
     else
       render json: {error: user.errors.full_messages}, status: 422

@@ -652,3 +652,51 @@ Now we need to create a route for the register action :
 ```Ruby
   post '/auth/register', to: 'auth#register', as: 'register'
 ```
+
+If we have look in auth_controller we can see we don't follow the DRY practice, now we can refactor our code a bit to make it better. If we make a helper call in app directory it will be accessable any where wihtin the app dir. we can make a new dir call services and inside this dir we can make a file call jwt_service.rb. in this file we need a plain ruby class as a helper:
+
+```Ruby
+class JwtService
+  # first we need to create a instance var for our key secret base
+  @secret = Rails.application.credentials.dig(:secret_key_base)
+  def self.encode(user)
+    payload = {user_id: user.id, exp: 1.hour.from_now.to_i}
+    token = JWT.encode(payload, @secrete)
+  end
+
+  def self.decode(token)
+
+  end
+end
+```
+
+Now we can use this helper in our auth controller:
+
+```Ruby
+  def register
+    user = User.create(auth_params)
+    unless user.errors.any?
+    # we use the JwtService helper for the token
+      token = JwtService.encode(user)
+      render json: {jwt: token, username: user.username}, status: 201
+    else
+      render json: {error: user.errors.full_messages}, status: 404
+    end
+  end
+
+```
+
+We can do the same thing in our login action:
+
+```Ruby
+  def login
+    user = User.find_by(email: auth_params[:email])
+    if user&.authenticate(auth_params[:password])
+     # we use the JwtService helper for the token
+      token = JwtService.encode(user)
+      render json: {jwt: token, username: user.username}, status: 200
+    else
+      render json: {error: "Wrong credentails!"}
+    end
+  end
+```
