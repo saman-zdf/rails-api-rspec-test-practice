@@ -33,7 +33,7 @@ group :development, :test do
 
   # ************#**********
   # custom tests for test environment 
-  # for rspec rails you need to run rails g rspec:install to configure the file we need for the test 
+  # for rspec rails you need to run in your terminal "rails g rspec:install" to configure the file we need for the test 
   gem "rspec-rails"
   # in spec directory we should create a helper or support direcotory with two file 1. database_cleaner.rb, 2.factory_bot.rb,
 

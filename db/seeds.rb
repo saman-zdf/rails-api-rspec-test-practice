@@ -6,7 +6,7 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 if User.count == 0
-  User.create(username: "first", email: "first@test", password: "121212", password_confirmation: '121212' )
+  User.create(username: "first", email: "first@test.com", password: "121212", password_confirmation: '121212' )
   puts "Created user"
 end
 

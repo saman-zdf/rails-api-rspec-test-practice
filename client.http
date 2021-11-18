@@ -10,3 +10,24 @@ GET http://localhost:3000/posts/1
 
 ### get request with the invalid id for post  
 GET http://localhost:3000/posts/20
+
+
+
+### login user with correct credentails 
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "first@test.com", 
+  "password": "121212"
+}
+
+
+### login user with incorrect credentails 
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "first@test.com", 
+  "password": "111111"
+}

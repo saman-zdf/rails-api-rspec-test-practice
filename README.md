@@ -520,3 +520,5 @@ at the top of your RSpec.describe in the posts_spec.rb.
 - All the test for the post id has been succesfully done
 
 ---
+
+- Adding user controller with jwt
