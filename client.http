@@ -14,11 +14,11 @@ GET http://localhost:3000/posts/20
 ### create a post with token
 POST http://localhost:3000/posts
 Content-Type: application/json
-Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE2MzcyOTM4Nzd9.XDlc195XTmxRMOEA8-gglyjYSIGLZKyIljFK1Fu2Qh8"
+Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE2MzczMTgxMDF9.dRjwM78VhX56tmbTadnX_71jaFhWds4k1COMYnqpR14"
 
 {
-  "title": "I'm authenticate",
-  "content": "Testing",
+  "title": "Dnay1 created me",
+  "content": "I have been created with dany 1",
   "category_id": 1
 }
 
@@ -32,6 +32,36 @@ Content-Type: application/json
   "content": "oh",
   "category_id": 1
 }
+
+
+### update a post with token
+PUT http://localhost:3000/posts/16
+Content-Type: application/json
+Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE2MzczMTgyNTl9.bGnGtdcWJ5a17KSocCwC3LcU3gQdRNpEinOnx0RXFPU"
+
+{
+  "title": "First edited me",
+  "content": "I've been edited with token and first user!!!!",
+  "category_id": 1
+}
+
+
+### update a post without token
+PUT http://localhost:3000/posts/1
+Content-Type: application/json
+
+{
+  "title": "I'm the edited one again",
+  "content": "I've been edited with token",
+  "category_id": 4
+}
+
+
+### delete post with token 
+DELETE http://localhost:3000/posts/3
+Content-Type: application/json
+Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE2MzczMTc2NTZ9.9WK_rRTFlJ9VETf4b5m6IQ_gZx_IM2Vo6dJ3BdXlme0"
+
 
 
 

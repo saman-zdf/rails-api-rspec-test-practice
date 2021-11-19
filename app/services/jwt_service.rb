@@ -14,7 +14,6 @@ class JwtService
       payload = JWT.decode(token, @secret, true)
       payload[0]
     rescue Exception=> e
-      pp e 
       nil
     end
   end

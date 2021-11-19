@@ -785,3 +785,212 @@ now we can add a create method in the posts_controller:
       params.require(:post).permit(:title, :content, :category_id, :user_id)
     end
 ```
+
+- Now we ca create a post with user authentication. Next we need to write some test for the creatin post:
+
+```Ruby
+discribe "POST /posts" do
+  before(:all) do
+    @post_count = Post.count
+    @new_user = create(:user, email: "newUser@test.com", uername: "newUser")
+  end
+
+  context "Create post with token" do
+    before(:each) do
+      token = JwtService.encode(@new_user)
+      post '/posts/', headers: {Authorization: "Bearer #{token}"}, params: {post: {title: "test Post", content: "I am a test post", categoty_id: 1}}
+    end
+
+    it "should respond with 201 created" do
+      expect(response).to have_http_status(201)
+    end
+
+    it "should increase post count by 1" do
+      expect(Post.count).to eq @post_count + 1
+    end
+
+
+    it "should contain a correct content" do
+      expect(response.body).to include("test Post")
+      expect(response.body).to include("newUser")
+    end
+  end
+
+  context "Create post without token" do
+    before(:each) do
+
+      post '/posts/', params: {post: {title: "test Post", content: "I am a test post", categoty_id: 1}}
+    end
+
+    it "should respond with 401 unauthorized" do
+      expect(response).to have_http_status(201)
+    end
+
+    it "should not increase post count by 1" do
+      expect(Post.count).to eq @post_count
+    end
+
+
+    it "should contain an error message" do
+      expect(response.body).to include("You must be logged in to do that!")
+    end
+  end
+end
+
+```
+
+---
+
+now we can create a update and destroy action, but first we need the authoriza method in post controller:
+
+```Ruby
+before_action :authorize, only: [:show, :destroy]
+# in private
+private
+  def Authorize
+    remder json: {error: "you have no permission to do that"}, status: 401, unless current_user.id == @post.user_id
+  end
+
+```
+
+Now we can create update and destroy methods:
+
+```Ruby
+  def update
+    @post.upadte(post_params)
+    # the render post is a method in private to render the post or the error, Just for DRY
+    render_post(@post)
+  end
+
+  # you can add also render_post for the create action
+  def create
+    post = current_user.posts.create(post_params)
+    render_post(post)
+  end
+
+
+  private
+    def render_post(post)
+      unless post.errors.any?
+        render json: post, include: {author: {only: :username}, category: {only: :name}}, status: 201
+      else
+        render json: {error: post.errors.full_messages}, status: 422
+      end
+    end
+```
+
+next we need to create a destroy action
+
+```Ruby
+  def destroy
+    attributes = @post.attributes
+    @post.destroy
+    render json: attributes, status: 202
+  end
+```
+
+now we need to add routes for update and the destroy action:
+
+```Ruby
+  put '/posts/:id', to: 'posts#update'
+  patch '/posts/:id', to: 'posts#update'
+  delete '/posts/:id', to: 'posts#destroy'
+```
+
+Finlay we can write some tests for the update and destroy action
+
+```Ruby
+# test for updating a pot
+  describe "PUT /posts/:id" do
+    before(:all) do
+      @new_user = create(:user, email: "roya@test.com", username: "roay")
+      @category = create(:category, name: "updating")
+      @token = JwtService.encode(@new_user)
+      post "/posts", headers: {Authorization: "Bearer #{@token}"}, params: {post: {title: "Saman's post", content: "This has been created by Saman", category_id: @category.id }}
+    end
+
+    context "update the post with token" do
+      before(:each) do
+        put '/posts/2', headers: {Authorization: "Bearer #{@token}"}, params: {post: {title: "Saman's post has been edited", content: "This has been created by Saman and updated", category_id: @category.id }}
+      end
+
+      it "should respond with 201 accepted" do
+        expect(response).to have_http_status(201)
+      end
+
+      it "should contain a correct content type" do
+        expect(response.content_type).to eq("application/json; charset=utf-8")
+      end
+
+      it "should contain a correct body" do
+        expect(response.body).to include("Saman's post has been edited")
+        expect(response.body).to include("roay")
+      end
+    end
+
+
+    context "update the post without token" do
+      before(:each) do
+        put '/posts/2', params: {post: {title: "Saman's post has been edited", content: "This has been created by Saman and updated", category_id: @category.id }}
+      end
+
+      it "should respond with 401 unauthorize" do
+        expect(response).to have_http_status(401)
+      end
+
+      it "should contain a correct content type" do
+        expect(response.content_type).to eq("application/json; charset=utf-8")
+      end
+
+      it "should contain an error message" do
+        expect(response.body).to include("You must be logged in to do that!")
+      end
+    end
+
+  end
+```
+
+And finaly tests for the destroy action:
+
+```Ruby
+  # tests for destroy post
+  describe "DELETE /posts/:id" do
+    before(:all) do
+      @new_user = create(:user, email: "sarah@test.com", username: "sarah")
+      @category = create(:category, name: "deleting")
+      @token = JwtService.encode(@new_user)
+      post "/posts", headers: {Authorization: "Bearer #{@token}"}, params: {post: {title: "Sarah's post", content: "This has been created by Sarah", category_id: @category.id }}
+    end
+
+    context "delete with token" do
+      before(:each) do
+        delete '/posts/3', headers: {Authorization: "Bearer #{@token}"}
+      end
+
+      it "should respond with 202" do
+        expect(response).to have_http_status(202)
+      end
+
+      it "should contain a correct content type" do
+        expect(response.content_type).to eq("application/json; charset=utf-8")
+      end
+
+      it "should contain correct content" do
+        expect(response.body).to include("Sarah's post")
+      end
+    end
+
+    context "delete with token" do
+      before(:each) do
+        delete '/posts/3'
+      end
+
+      it "should respond with 401 unauthorized" do
+        expect(response).to have_http_status(401)
+      end
+      it "should contain an error message" do
+        expect(response.body).to include("You must be logged in to do that!")
+      end
+    end
+  end
+```
