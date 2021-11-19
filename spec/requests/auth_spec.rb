@@ -10,7 +10,7 @@ RSpec.describe "Auths", type: :request do
     context "with correct credentials" do 
       # I can change the params data by passing new params data like below, it will change it with the existing data from factory
       before(:each) do
-        post '/auth/login', params: {auth: {email: "sam@test.com", password: "password1"}}
+        post '/auth/login', params: {auth: {login: "sam@test.com", password: "password1"}}
       end
 
       it "should respond with 200 ok" do
@@ -30,7 +30,7 @@ RSpec.describe "Auths", type: :request do
     context "with incorrect credentials" do 
       # I can change the params data by passing new params data like below, it will change it with the existing data from factory
       before(:each) do
-        post '/auth/login', params: {auth:{email: "sam@test.com", password: "incorrectPass"}}
+        post '/auth/login', params: {auth:{login: "sam@test.com", password: "incorrectPass"}}
       end
 
       it "should respond with 422 ok" do

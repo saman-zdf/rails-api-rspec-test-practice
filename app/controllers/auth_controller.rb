@@ -2,7 +2,7 @@ class AuthController < ApplicationController
 
   def login 
     # for log in we can user find_by to find a user by email, and use your auth_params to get the email
-    user = User.find_by(email: auth_params[:email])
+    user = User.login(auth_params[:login]).first
     # this is a shorthand of puttin user && user.authenticate
     if user&.authenticate(auth_params[:password])
       token = JwtService.encode(user)
@@ -26,6 +26,6 @@ class AuthController < ApplicationController
 
   private
     def auth_params
-      params.require(:auth).permit( :email, :password, :password_confirmation, :username)
+      params.require(:auth).permit( :auth, :login, :email, :password, :password_confirmation, :username)
     end
 end

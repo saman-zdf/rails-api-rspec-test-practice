@@ -700,3 +700,88 @@ We can do the same thing in our login action:
     end
   end
 ```
+
+---
+
+now we got all the things we need for our app, next we need to create authenticate method to let user create post after sing in, but before we do that we can add one more feature to our app which is login whit either username or email. it's pretty easy to do that. first we need to create a scope in our user model:
+
+```Ruby
+scope :login, -> (input) {User.where(email: input).or(User.where(username: input))}
+```
+
+next we need to make some minor changes in our auth_controller in log in method:
+
+```Ruby
+  # instead of User.find_by(email) we nee to pass
+  user = User.login(auth_params[:login]).first
+```
+
+next we need to add a login in a our auth_params,
+
+```Ruby
+  params.require(:auth).permit(:auth, :login, :username, :email, :password, :password_confirmation)
+```
+
+## now we can login either with the username or email.
+
+In order to create post we need to authenticate, for that we need some helper method in our application controller:
+
+```Ruby
+  def authenticate
+    token = extract_headers_from_token
+    payload = JwtService.decode(token)
+    if payload
+      @current_user ||= User.find(payload["user_id"])
+    else
+      render json: {error: "You must be logged in to do that!"}, status: 401
+    end
+  end
+
+  def current_user
+    @current_user
+  end
+
+  def logged_in?
+    !!current_user
+  end
+
+  def extract_headers_from_token
+    request.headers["Authorization"] && request.headers["Authorization"].split(" ")[1]
+  end
+```
+
+once the helper method are implemented in application controller we need to create a decode method in JwtService.rb in services directory:
+
+```Ruby
+ def self.decode(token)
+#  @secrete is a instant vars in the JwtService class
+  begin
+    payload = JWT.decode(token, @secret, true)
+    payload[0]
+  rescue Exception => e
+    pp e
+    nil
+  end
+ end
+
+```
+
+now we can add a create method in the posts_controller:
+
+```Ruby
+# at the top of the posts_contoller we need to add a before_action for authenticate
+  before_action :authenticate, only: [:create, :update, :destroy]
+  def create
+    post = current_user.posts.create(post_params)
+    unless post.errors.any?
+      render json: post, include: {author: {only: :username}, categoy: {only: :name}}, status: 201
+    else
+      render json: {errors: post.errors.full_messages}, status: 422
+    end
+  end
+
+  private
+    def post_params
+      params.require(:post).permit(:title, :content, :category_id, :user_id)
+    end
+```

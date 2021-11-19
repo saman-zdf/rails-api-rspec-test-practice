@@ -11,6 +11,28 @@ GET http://localhost:3000/posts/1
 ### get request with the invalid id for post  
 GET http://localhost:3000/posts/20
 
+### create a post with token
+POST http://localhost:3000/posts
+Content-Type: application/json
+Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE2MzcyOTM4Nzd9.XDlc195XTmxRMOEA8-gglyjYSIGLZKyIljFK1Fu2Qh8"
+
+{
+  "title": "I'm authenticate",
+  "content": "Testing",
+  "category_id": 1
+}
+
+
+### create a post without token
+POST http://localhost:3000/posts
+Content-Type: application/json
+
+{
+  "title": "I'm not authenticate",
+  "content": "oh",
+  "category_id": 1
+}
+
 
 
 ### register a user 
@@ -31,7 +53,7 @@ POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-  "email": "dany@test.com", 
+  "login": "first", 
   "password": "121212"
 }
 
@@ -44,3 +66,5 @@ Content-Type: application/json
   "email": "first@test.com", 
   "password": "111111"
 }
+
+

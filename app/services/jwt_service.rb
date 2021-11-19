@@ -9,7 +9,14 @@ class JwtService
     token = JWT.encode(payload, @secret)
   end
 
-  def self.decode(toke) 
-
+  def self.decode(token) 
+    begin
+      payload = JWT.decode(token, @secret, true)
+      payload[0]
+    rescue Exception=> e
+      pp e 
+      nil
+    end
   end
+
 end
